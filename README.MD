@@ -14,9 +14,14 @@
 
 ## 运行
 
-1.  安装 PyQt5 (`pip install -r requirements.txt`)。
-2.  运行主程序: `python main.py`
-
+1.  安装依赖
+```shell
+pip install -r requirements.txt
+```
+2.  运行主程序: 
+```shell
+python main.py
+```
 ## 打包
 ## pyinstaller打包
 安装pyinstaller
@@ -36,3 +41,6 @@ sudo apt-get install ll-builder
 ```shell
 ll-builder build
 ```
+## 后言
+此项目素材由[Mc Assets](https://mcasset.cloud/)提供
+此项目部分代码由llm完成
