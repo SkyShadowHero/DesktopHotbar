@@ -41,7 +41,7 @@ sudo apt-get install ll-builder
 ```shell
 ll-builder build
 ```
-注：目前玲珑打包的版本没法启动应用
+注：目前玲珑打包的版本没法启动应用，推荐使用python启动
 ## 后言
-此项目素材由[Mc Assets](https://mcasset.cloud/)提供
+此项目素材由[Mc Assets](https://mcasset.cloud/)提供  
 此项目部分代码由llm完成
