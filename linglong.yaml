@@ -1,0 +1,35 @@
+version: "1"
+
+package:
+  id: com.skyshadow.hotbar
+  name: McDesktopHotbar
+  kind: app
+  version: 0.0.0.1
+  description: |
+    一个我的世界风格的桌面物品栏。
+
+command:
+  - mcdesktophotbar
+
+base: org.deepin.base/25.2.0
+
+build: |
+  mkdir -p ${PREFIX}/bin
+  mkdir -p ${PREFIX}/share/icons/hicolor/256x256/apps
+  mkdir -p ${PREFIX}/share/applications
+  
+  install -Dm755 dist/Desktophotbar ${PREFIX}/bin/mcdesktophotbar
+  
+  install -Dm644 icon.png ${PREFIX}/share/icons/hicolor/256x256/apps/mcdesktophotbar.png
+  
+  # 创建并安装 .desktop 文件
+  cat > ${PREFIX}/share/applications/mcdesktophotbar.desktop << EOF
+  [Desktop Entry]
+  Type=Application
+  Name=DesktopHotbar
+  Comment=我的世界风格的桌面物品栏
+  Exec=mcdesktophotbar
+  Icon=mcdesktophotbar
+  Categories=Utility;
+  Terminal=false
+  EOF
