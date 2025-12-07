@@ -14,6 +14,17 @@
 
 ## 运行
 
+### 自动(测试)
+
+1. 输入
+```shell
+chmod -x init.sh
+sudo ./init.sh
+```
+后会自动执行下面手动安装的步骤并且生成一个application于/usr/share/applications文件夹中
+可在启动器双击运行或设置开机自启动
+
+### 手动
 1.  安装依赖
 ```shell
 pip install -r requirements.txt

@@ -23,9 +23,9 @@ def resource_path(relative_path):
     try:
         base_path = sys._MEIPASS
     except Exception:
-        base_path = os.path.abspath(".")
+        # 获取 main.py 文件所在的目录
+        base_path = os.path.dirname(os.path.abspath(__file__))
     return os.path.join(base_path, relative_path)
-
 def setup_fcitx5_im_plugin():
     """
     注入Fcitx5输入法插件，确保在开发和打包环境下都能输入中文。
@@ -161,8 +161,8 @@ MODERN_LIGHT_STYLE = """
 # --- 配置文件管理器 ---
 class ConfigManager:
     def __init__(self):
-        config_dir = os.path.join(os.path.expanduser("~"), ".config", "desktophotbar")
-        self.config_path = os.path.join(config_dir, "config.json")
+        config_dir = Path.home() / ".config" / "desktophotbar"
+        self.config_path = config_dir / "config.json"
         os.makedirs(config_dir, exist_ok=True)
     def save(self, data):
         try:
@@ -225,7 +225,7 @@ class GeneralSettingsDialog(QDialog):
         self.scale_combo = QComboBox(self)
         for scale in self.SCALE_PRESETS:
             self.scale_combo.addItem(f"{scale:.2f}x", userData=scale)
-        current_scale = settings.get('scale', 3.0)
+        current_scale = settings.get('scale', 2.0)
         closest_preset = min(self.SCALE_PRESETS, key=lambda x: abs(x - current_scale))
         self.scale_combo.setCurrentIndex(self.SCALE_PRESETS.index(closest_preset))
         self.scale_combo.currentIndexChanged.connect(self.on_settings_changed)
@@ -524,18 +524,23 @@ class HotbarWindow(QMainWindow):
         return icon if icon and not icon.isNull() else None
         
     def findImagePath(self, image_name):
-        if hasattr(sys, '_MEIPASS'):
+        try:
             base_path = sys._MEIPASS
-        else:
-            base_path = os.path.abspath(".")
+        except Exception:
+            # 获取 main.py 文件所在的目录
+            base_path = os.path.dirname(os.path.abspath(__file__))
+
         image_path = os.path.join(base_path, 'assets', image_name)
         if os.path.exists(image_path):
             return image_path
+        
         fallback_path = os.path.join(base_path, image_name)
         if os.path.exists(fallback_path):
             return fallback_path
-        print(f"Warning: Image '{image_name}' not found at '{image_path}' or '{fallback_path}'")
+            
+        print(f"Warning: Image '{image_name}' not found in '{base_path}/assets' or '{base_path}'")
         return None
+
 
     def loadPixmap(self, path, fallback_func=None):
         if path:
@@ -560,9 +565,16 @@ class HotbarWindow(QMainWindow):
         if app_info and app_info.get('exec'):
             try:
                 exec_command = app_info['exec'].split('%')[0].strip()
-                subprocess.Popen(['nohup', 'sh', '-c', exec_command, '&'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, start_new_session=True)
-            except Exception as e: QMessageBox.critical(self, "错误", f"启动应用失败: {str(e)}")
-            
+                user_home_dir = str(Path.home()) 
+                subprocess.Popen(
+                    ['nohup', 'sh', '-c', exec_command, '&'],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True,
+                    cwd=user_home_dir
+                )
+            except Exception as e:
+                QMessageBox.critical(self, "错误", f"启动应用失败: {str(e)}")
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls(): event.acceptProposedAction()
         
