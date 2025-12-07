@@ -65,21 +65,8 @@ else
     ICON_PATH="$WORK_DIR/icon.png"
 fi
 
-DESKTOP_FILE_PATH="$HOME/Desktop/DesktopHotbar.desktop"
 APPLICATION_FILE_PATH="/usr/share/applications/DesktopHotbar.desktop"
 # 创建 .desktop 文件内容
-cat > "$DESKTOP_FILE_PATH" << EOL
-[Desktop Entry]
-Version=1.0
-Name=Desktop Hotbar
-Comment=A Minecraft-style application hotbar for your desktop
-Exec=$PYTHON_EXEC_PATH $MAIN_PY_PATH
-Path=$WORK_DIR
-Icon=$ICON_PATH
-Terminal=false
-Type=Application
-Categories=Utility;
-EOL
 
 cat > "$APPLICATION_FILE_PATH" << EOL
 [Desktop Entry]
@@ -100,14 +87,16 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-echo "✅ 桌面文件已创建于: $DESKTOP_FILE_PATH 和 $DESKTOP_FILE_PATH"
+echo "✅ 桌面文件已创建于:$APPLICATION_FILE_PATH"
 
-为 .desktop 文件添加可执行权限
-chmod +x "$DESKTOP_FILE_PATH"
+# 为 .desktop 文件添加可执行权限
+chmod +x "$APPLICATION_FILE_PATH"
 echo "✅ 已为快捷方式添加可执行权限。"
 
 # 退出虚拟环境
 deactivate
 
 echo -e "${GREEN}=== 全部设置完成！ ===${NC}"
-echo "您现在可以从桌面双击 'Desktop Hotbar' 图标来启动程序了。"
+echo "您现在可以从启动器点击 'Desktop Hotbar' 图标来启动程序了。"
+echo "如果需要从启动器中删除该图标"
+echo "请输入'sudo rm -rf $APPLICATION_FILE_PATH'"
