@@ -358,7 +358,7 @@ class HotbarWindow(QMainWindow):
             context_menu.addAction(general_settings_action)
             context_menu.addAction(quit_action)
         
-        book_image_path = self.findImagePath('book.png')
+        book_image_path = self.findImagePath('book.svg')
         if book_image_path:
             book_image_path = book_image_path.replace('\\', '/')
             context_menu.setFixedSize(150, 184)

@@ -2,7 +2,7 @@
     <qresource prefix="/assets">
         <file alias="hotbar.png">assets/hotbar.png</file>
         <file alias="hotbar_selection.png">assets/hotbar_selection.png</file>
-        <file alias="book.png">assets/book.png</file>
+        <file alias="book.svg">assets/book.svg</file>
         <file alias="icon.png">icon.png</file>
     </qresource>
 </RCC>

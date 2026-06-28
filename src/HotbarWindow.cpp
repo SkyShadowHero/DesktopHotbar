@@ -349,7 +349,7 @@ void HotbarWindow::showContextMenu(const QPoint &pos, int slotIndex) {
     contextMenu->setStyleSheet(R"(
         QMenu {
             background-color: transparent;
-            background-image: url(:/assets/book.png);
+            background-image: url(:/assets/book.svg);
             background-repeat: no-repeat;
             background-position: center;
             border: none;
