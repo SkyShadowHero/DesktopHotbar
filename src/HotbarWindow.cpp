@@ -19,6 +19,8 @@
 #include <QFileInfo>
 #include <QMessageBox>
 #include <QWindow>
+#include <QPropertyAnimation>
+#include <QGraphicsOpacityEffect>
 #include <QGuiApplication>
 #include <QDebug>
 
@@ -46,6 +48,7 @@ HotbarWindow::HotbarWindow(QWidget *parent)
     // 默认设置
     settings["is_movable"] = true;
     settings["scale"] = 3.0;
+    settings["smooth_hover"] = false;
     slotData = QVariantList(SLOT_COUNT);  // 9 个空 QVariant
 
     loadConfig();
@@ -77,6 +80,27 @@ void HotbarWindow::initUI() {
     selectionLabel = new QLabel(backgroundLabel);
     selectionLabel->setAttribute(Qt::WA_TransparentForMouseEvents);
     selectionLabel->hide();
+
+    // 淡入淡出效果
+    opacityEffect = new QGraphicsOpacityEffect(this);
+    opacityEffect->setOpacity(1.0);
+    selectionLabel->setGraphicsEffect(opacityEffect);
+
+    // 悬停平滑移动动画
+    hoverAnimation = new QPropertyAnimation(selectionLabel, "pos", this);
+    hoverAnimation->setDuration(220);
+    hoverAnimation->setEasingCurve(QEasingCurve::InOutCubic);
+
+    // 淡出动画
+    fadeAnimation = new QPropertyAnimation(opacityEffect, "opacity", this);
+    fadeAnimation->setDuration(150);
+    fadeAnimation->setStartValue(1.0);
+    fadeAnimation->setEndValue(0.0);
+    fadeAnimation->setEasingCurve(QEasingCurve::OutCubic);
+    connect(fadeAnimation, &QPropertyAnimation::finished, this, [this]() {
+        selectionLabel->hide();
+        opacityEffect->setOpacity(1.0);
+    });
 
     // 创建 9 个格子
     for (int i = 0; i < SLOT_COUNT; ++i) {
@@ -179,7 +203,15 @@ void HotbarWindow::mouseMoveEvent(QMouseEvent *event) {
             int h = static_cast<int>(geom[3] * scale);
             if (pos.x() >= x && pos.x() < x + w && pos.y() >= y && pos.y() < y + h) {
                 if (currentHoverSlot != i) {
-                    selectionLabel->move(x, y);
+                    if (settings.value("smooth_hover", true).toBool()) {
+                        hoverAnimation->stop();
+                        hoverAnimation->setEndValue(QPoint(x, y));
+                        hoverAnimation->start();
+                    } else {
+                        selectionLabel->move(x, y);
+                    }
+                    fadeAnimation->stop();
+                    opacityEffect->setOpacity(1.0);
                     selectionLabel->show();
                     selectionLabel->raise();
                     currentHoverSlot = i;
@@ -190,7 +222,10 @@ void HotbarWindow::mouseMoveEvent(QMouseEvent *event) {
         }
 
         if (!hoverFound && currentHoverSlot != -1) {
-            selectionLabel->hide();
+            if (settings.value("smooth_hover", true).toBool())
+                fadeAnimation->start();
+            else
+                selectionLabel->hide();
             currentHoverSlot = -1;
         }
     }
@@ -211,8 +246,12 @@ void HotbarWindow::closeEvent(QCloseEvent *event) {
 }
 
 void HotbarWindow::leaveEvent(QEvent *event) {
-    selectionLabel->hide();
     currentHoverSlot = -1;
+    if (hoverAnimation) hoverAnimation->stop();
+    if (settings.value("smooth_hover", true).toBool())
+        fadeAnimation->start();
+    else
+        selectionLabel->hide();
     QMainWindow::leaveEvent(event);
 }
 

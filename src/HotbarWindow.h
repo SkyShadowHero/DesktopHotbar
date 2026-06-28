@@ -10,6 +10,8 @@
 #include "ConfigManager.h"
 
 class QLabel;
+class QPropertyAnimation;
+class QGraphicsOpacityEffect;
 class SlotLabel;
 class GeneralSettingsDialog;
 
@@ -60,6 +62,9 @@ private:
     QPixmap originalPixmap;
     QPixmap selectionPixmap;
     QLabel *selectionLabel;
+    QGraphicsOpacityEffect *opacityEffect = nullptr;
+    QPropertyAnimation *hoverAnimation = nullptr;
+    QPropertyAnimation *fadeAnimation = nullptr;
     QVector<SlotLabel *> slotLabels;
 
     QPoint dragPosition;

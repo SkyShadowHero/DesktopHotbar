@@ -29,6 +29,13 @@ GeneralSettingsDialog::GeneralSettingsDialog(const QVariantMap &settings, QWidge
             this, &GeneralSettingsDialog::onSettingsChanged);
     layout->addWidget(lockCheckbox);
 
+    // 平滑悬停动画
+    smoothHoverCheckbox = new QCheckBox("平滑指示器动画", this);
+    smoothHoverCheckbox->setChecked(settings.value("smooth_hover", false).toBool());
+    connect(smoothHoverCheckbox, &QCheckBox::checkStateChanged,
+            this, &GeneralSettingsDialog::onSettingsChanged);
+    layout->addWidget(smoothHoverCheckbox);
+
     // 缩放比例
     layout->addWidget(new QLabel("缩放比例:"));
     scaleCombo = new QComboBox(this);
@@ -46,19 +53,17 @@ GeneralSettingsDialog::GeneralSettingsDialog(const QVariantMap &settings, QWidge
             this, &GeneralSettingsDialog::onSettingsChanged);
     layout->addWidget(scaleCombo);
 
-    // 按钮: 退出程序 + 关闭对话框
-    auto *buttons = new QDialogButtonBox(this);
-    auto *quitBtn = buttons->addButton("退出程序", QDialogButtonBox::DestructiveRole);
-    connect(quitBtn, &QPushButton::clicked, qApp, &QApplication::quit);
-    auto *closeBtn = buttons->addButton(QDialogButtonBox::Close);
-    closeBtn->setIcon(QIcon());
-    connect(buttons, &QDialogButtonBox::rejected, this, &QDialog::reject);
-    layout->addWidget(buttons);
+    // 关闭按钮
+    auto *closeBtn = new QDialogButtonBox(QDialogButtonBox::Close, this);
+    closeBtn->button(QDialogButtonBox::Close)->setIcon(QIcon());
+    connect(closeBtn, &QDialogButtonBox::rejected, this, &QDialog::reject);
+    layout->addWidget(closeBtn);
 }
 
 void GeneralSettingsDialog::onSettingsChanged() {
     QVariantMap s;
     s["is_movable"] = !lockCheckbox->isChecked();
+    s["smooth_hover"] = smoothHoverCheckbox->isChecked();
     s["scale"] = scaleCombo->currentData().toDouble();
     emit settingsChanged(s);
 }

@@ -20,6 +20,7 @@ private slots:
 
 private:
     QCheckBox *lockCheckbox;
+    QCheckBox *smoothHoverCheckbox;
     QComboBox *scaleCombo;
 };
 
