@@ -62,102 +62,6 @@ def setup_fcitx5_im_plugin():
         # 捕获任何可能的错误，避免程序因此崩溃
         print(f"自动注入 Fcitx5 插件时发生错误: {e}")
 
-MODERN_LIGHT_STYLE = """
-    /* --- 基础窗口和字体 --- */
-    QDialog, QWidget {
-        background-color: #F5F5F5;
-        color: #212121;
-        font-size: 14px;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-    }
-
-    /* --- 标签 --- */
-    QLabel {
-        color: #212121;
-        padding-top: 5px;
-    }
-
-    /* --- 输入框和下拉框 --- */
-    QLineEdit, QComboBox {
-        background-color: #FFFFFF;
-        color: #212121;
-        border: 1px solid #DCDCDC;
-        border-radius: 5px;
-        padding: 8px;
-        min-height: 20px;
-    }
-    QLineEdit:focus, QComboBox:focus {
-        border: 1px solid #0078D7;
-    }
-
-    /* --- 下拉框箭头 --- */
-    QComboBox::drop-down {
-        border: none;
-        width: 20px;
-    }
-    QComboBox::down-arrow {
-        image: url(none);
-    }
-
-    /* --- 下拉列表容器 --- */
-    QComboBox QAbstractItemView {
-        background-color: #FFFFFF;
-        border: 1px solid #DCDCDC;
-        border-radius: 5px;
-        outline: 0px;
-    }
-
-    /* --- 下拉列表中的项目 --- */
-    QComboBox QAbstractItemView::item {
-        color: #212121;
-        background-color: transparent;
-        padding: 8px 10px;
-    }
-    QComboBox QAbstractItemView::item:selected, 
-    QComboBox QAbstractItemView::item:hover {
-        background-color: #0078D7;
-        color: #FFFFFF;
-    }
-
-    /* --- 按钮 --- */
-    QPushButton {
-        background-color: #EAEAEA;
-        color: #212121;
-        border: 1px solid #DCDCDC;
-        border-radius: 5px;
-        padding: 8px 16px;
-        font-weight: 500;
-    }
-    QPushButton:hover {
-        background-color: #F0F0F0;
-        border-color: #C0C0C0;
-    }
-    QPushButton:pressed {
-        background-color: #0078D7;
-        color: #FFFFFF;
-        border-color: #005A9E;
-    }
-
-    /* --- 复选框 --- */
-    QCheckBox {
-        spacing: 10px;
-    }
-    QCheckBox::indicator {
-        width: 20px;
-        height: 20px;
-        border-radius: 4px;
-        border: 1px solid #DCDCDC;
-        background-color: #FFFFFF;
-    }
-    QCheckBox::indicator:hover {
-        border-color: #C0C0C0;
-    }
-    QCheckBox::indicator:checked {
-        background-color: #0078D7;
-        border-color: #0078D7;
-    }
-"""
-
 # --- 配置文件管理器 ---
 class ConfigManager:
     def __init__(self):
@@ -183,7 +87,7 @@ class SlotSettingsDialog(QDialog):
     def __init__(self, app_name, icon_path, parent=None):
         super().__init__(parent)
         self.setWindowTitle("物品栏设置")
-        self.setStyleSheet(MODERN_LIGHT_STYLE)
+        self.setMinimumWidth(360)
         self.layout = QVBoxLayout(self)
         self.layout.addWidget(QLabel("应用名称:"))
         self.name_edit = QLineEdit(self)
@@ -209,14 +113,7 @@ class GeneralSettingsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("总设置")
         self.setMinimumWidth(300)
-        self.setStyleSheet(MODERN_LIGHT_STYLE)
         self.layout = QVBoxLayout(self)
-        self.layout.addWidget(QLabel("窗口层级:"))
-        self.level_combo = QComboBox(self)
-        self.level_combo.addItems(["总在最前", "正常", "置于底层 (桌面部件)"])
-        self.level_combo.setCurrentIndex(settings.get('level', 0))
-        self.level_combo.currentIndexChanged.connect(self.on_settings_changed)
-        self.layout.addWidget(self.level_combo)
         self.lock_checkbox = QCheckBox("锁定窗口位置 (不可拖动)", self)
         self.lock_checkbox.setChecked(not settings.get('is_movable', True))
         self.lock_checkbox.stateChanged.connect(self.on_settings_changed)
@@ -236,7 +133,6 @@ class GeneralSettingsDialog(QDialog):
         self.layout.addWidget(self.close_button)
     def on_settings_changed(self):
         settings = {
-            'level': self.level_combo.currentIndex(),
             'is_movable': not self.lock_checkbox.isChecked(),
             'scale': self.scale_combo.currentData()
         }
@@ -355,7 +251,7 @@ class HotbarWindow(QMainWindow):
 
     def load_config(self):
         config_data = self.config_manager.load()
-        self.settings = {'level': 0, 'is_movable': True, 'scale': 3.0}
+        self.settings = {'is_movable': True, 'scale': 3.0}
         self.settings.update(config_data.get('settings', {}))
         self.slots = config_data.get('slots', [None] * 9)
         pos_data = self.settings.get('window_position')
@@ -403,15 +299,12 @@ class HotbarWindow(QMainWindow):
         self.save_config()
 
     def applyGeneralSettings(self, new_settings, is_init=False):
+        old_scale = self.settings.get('scale', 3.0)
         self.settings.update(new_settings)
-        level = self.settings.get('level', 0)
-        flags = Qt.FramelessWindowHint
-        if level == 0: flags |= Qt.WindowStaysOnTopHint
-        elif level == 2: flags |= Qt.WindowStaysOnBottomHint
-        if self.windowFlags() != flags:
-            self.setWindowFlags(flags)
-            if not is_init: self.show()
-        self.updateLayout()
+        new_scale = self.settings.get('scale', 3.0)
+        # 只在缩放改变时重建布局 (避免不必要的 setFixedSize)
+        if is_init or old_scale != new_scale:
+            self.updateLayout()
 
     def leaveEvent(self, event):
         self.selection_label.hide()
@@ -422,14 +315,25 @@ class HotbarWindow(QMainWindow):
         app_info = self.slots[slot_index]
         context_menu = QMenu(self)
         context_menu.setAttribute(Qt.WA_TranslucentBackground)
-        
+        context_menu.setAttribute(Qt.WA_NoSystemBackground)  # 禁用系统主题的背景/圆角
+        # 禁用 compositor 阴影 (PyQt5 5.15+ 支持)
+        if hasattr(Qt, 'NoDropShadowWindowHint'):
+            context_menu.setWindowFlag(Qt.NoDropShadowWindowHint, True)
+
         general_settings_action = QAction("总设置...", self)
         general_settings_action.triggered.connect(self.openGeneralSettings)
-        quit_action = QAction("退出", self)
-        quit_action.triggered.connect(QApplication.instance().quit)
         
         if app_info:
-            title_action = QAction(app_info.get('name', '未知应用'), self)
+            title = app_info.get('name', '未知应用')
+            if len(title) > 14:
+                if len(title) > 24: title = title[:22] + ".."
+                mid = len(title) // 2
+                space_idx = title.rfind(' ', 0, mid)
+                if space_idx > 4 and space_idx < len(title) - 4:
+                    title = title[:space_idx] + "\n" + title[space_idx+1:]
+                else:
+                    title = title[:mid] + "\n" + title[mid:]
+            title_action = QAction(title, self)
             title_action.setEnabled(False)
             launch_action = QAction("启动应用", self)
             launch_action.triggered.connect(lambda: self.launchApp(slot_index))
@@ -441,16 +345,18 @@ class HotbarWindow(QMainWindow):
             context_menu.addAction(launch_action)
             context_menu.addAction(remove_action)
             context_menu.addAction(slot_settings_action)
+            context_menu.addAction(general_settings_action)
         else:
+            quit_action = QAction("退出", self)
+            quit_action.triggered.connect(QApplication.instance().quit)
             title_action = QAction("空白物品栏", self)
             title_action.setEnabled(False)
             add_app_action = QAction("拖放desktop文件", self)
             add_app_action.setEnabled(False)
             context_menu.addAction(title_action)
             context_menu.addAction(add_app_action)
-            
-        context_menu.addAction(general_settings_action)
-        context_menu.addAction(quit_action)
+            context_menu.addAction(general_settings_action)
+            context_menu.addAction(quit_action)
         
         book_image_path = self.findImagePath('book.png')
         if book_image_path:
@@ -464,12 +370,13 @@ class HotbarWindow(QMainWindow):
                     background-repeat: no-repeat;
                     background-position: center;
                     border: none;
+                    outline: none;
                 }}
                 QMenu::item {{
                     color: #402A18;
                     background-color: transparent;
-                    padding: 3px 25px;
-                    margin: 2px 0px;
+                    padding: 4px 16px;
+                    margin: 1px 0px;
                     font-weight: 500;
                 }}
                 QMenu::item:selected {{
@@ -481,8 +388,7 @@ class HotbarWindow(QMainWindow):
                 QMenu::item:disabled {{
                     color: #000000;
                     font-weight: bold;
-                    padding-top: 18px;
-                    padding-bottom: 5px;
+                    padding: 14px 16px 4px 16px;
                 }}
             """
             context_menu.setStyleSheet(stylesheet)
@@ -562,16 +468,38 @@ class HotbarWindow(QMainWindow):
         
     def launchApp(self, slot_index):
         app_info = self.slots[slot_index]
+        if not app_info:
+            return
+
+        # 优先: 通过 gio launch 启动 (行为与桌面环境完全一致)
+        desktop_path = app_info.get('path', '')
+        if desktop_path and os.path.exists(desktop_path):
+            try:
+                subprocess.Popen(
+                    ['gio', 'launch', desktop_path],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    start_new_session=True
+                )
+                return
+            except Exception:
+                pass
+
+        # 回退: 直接执行 Exec 字段
         if app_info and app_info.get('exec'):
             try:
                 exec_command = app_info['exec'].split('%')[0].strip()
-                user_home_dir = str(Path.home()) 
+                working_dir = app_info.get('workdir', '')
+                if not working_dir:
+                    working_dir = str(Path.home())
+                elif working_dir.startswith('~/'):
+                    working_dir = str(Path.home()) + working_dir[1:]
                 subprocess.Popen(
                     ['nohup', 'sh', '-c', exec_command, '&'],
                     stdout=subprocess.DEVNULL,
                     stderr=subprocess.DEVNULL,
                     start_new_session=True,
-                    cwd=user_home_dir
+                    cwd=working_dir
                 )
             except Exception as e:
                 QMessageBox.critical(self, "错误", f"启动应用失败: {str(e)}")
@@ -587,12 +515,25 @@ class HotbarWindow(QMainWindow):
             
     def parseDesktopFile(self, content):
         app_info = {}
+        in_desktop_entry = False
         for line in content.split('\n'):
+            s = line.strip()
+            if s.startswith('['):
+                if s == '[Desktop Entry]':
+                    in_desktop_entry = True
+                elif in_desktop_entry:
+                    break
+                continue
+            if not in_desktop_entry:
+                continue
             if '=' in line:
                 key, value = line.split('=', 1)
-                if key.strip() == 'Name': app_info['name'] = value.strip()
-                elif key.strip() == 'Icon': app_info['icon'] = value.strip()
-                elif key.strip() == 'Exec': app_info['exec'] = value.strip()
+                k = key.strip()
+                v = value.strip()
+                if k == 'Name': app_info['name'] = v
+                elif k == 'Icon': app_info['icon'] = v
+                elif k == 'Exec': app_info['exec'] = v
+                elif k == 'Path': app_info['workdir'] = v
         return app_info
 
 def main():
