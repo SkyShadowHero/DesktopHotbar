@@ -31,8 +31,6 @@ void SlotLabel::dropEvent(QDropEvent *event) {
     const QList<QUrl> urls = event->mimeData()->urls();
     if (!urls.isEmpty()) {
         QString filePath = urls.first().toLocalFile();
-        if (filePath.endsWith(".desktop")) {
-            emit fileDropped(filePath, m_index);
-        }
+        emit fileDropped(filePath, m_index);
     }
 }

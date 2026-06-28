@@ -510,8 +510,7 @@ class HotbarWindow(QMainWindow):
         urls = event.mimeData().urls()
         if urls:
             file_path = urls[0].toLocalFile()
-            if file_path.endswith('.desktop'): self.processDesktopFile(file_path, slot_index)
-            else: QMessageBox.warning(self, "错误", "请拖放 .desktop 文件")
+            self.processDesktopFile(file_path, slot_index)
             
     def parseDesktopFile(self, content):
         app_info = {}
