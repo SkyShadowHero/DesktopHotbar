@@ -557,6 +557,9 @@ QVariantMap HotbarWindow::parseDesktopFile(const QString &content) {
     for (const QString &line : lines) {
         QString trimmed = line.trimmed();
 
+        // 跳过开头注释
+        if (!inDesktopEntry && trimmed.startsWith("#!")) continue;
+
         // 找到 [Desktop Entry] 段开始解析; 遇到其他 [*] 段则停止
         if (trimmed.startsWith('[')) {
             if (trimmed == "[Desktop Entry]") {

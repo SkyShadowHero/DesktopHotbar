@@ -518,6 +518,9 @@ class HotbarWindow(QMainWindow):
         in_desktop_entry = False
         for line in content.split('\n'):
             s = line.strip()
+            # 跳过开头注释
+            if not in_desktop_entry and s.startswith('#!'):
+                continue
             if s.startswith('['):
                 if s == '[Desktop Entry]':
                     in_desktop_entry = True
